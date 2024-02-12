@@ -29,36 +29,38 @@ WebDriverWait(driver,15).until(
 html = driver.page_source
 soup = BeautifulSoup(html, 'html.parser')
 
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CLASS_NAME, 'e-appointment')))
+
+TotalEventCount =  len(driver.find_elements(By.CLASS_NAME, 'e-appointment'))
+LoopCount= 1
+
 #Get calendar month
 Month= soup.find('button', class_='e-tbar-btn e-tbtn-txt e-control e-btn e-lib')['aria-label']
 AppointmentXPath = '//*[@id="schedule"]/div[3]/div/table/tbody/tr[2]/td/div/table/tbody/tr[1]/td[2]/div[2]/div'
 DatePath = "//div[@class='e-date-time-details e-text-ellipsis']"
 SubjectPath = "//div[@class='e-subject e-text-ellipsis']"
 LocationPath = "//div[@class='e-location-details e-text-ellipsis']"
-
-
-WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.XP,'e-appointment')))
-
-TotalEvents =  len(driver.find_elements(By.XPATH, AppointmentXPath))
-LoopCount= 0
+Events = driver.find_elements(By.CLASS_NAME, 'e-appointment')
 
 Dates = []
 Subjects = []
 Locations = []
 
-while (LoopCount < TotalEvents):
-    EventInstance = driver.find_element(By.XPATH, AppointmentXPath)
-    EventInstance.click()
+while (LoopCount < TotalEventCount):
+    for Event in range(TotalEventCount):
+        EventInstance = driver.find_element(By.XPATH, AppointmentXPath).click()
+        
+        Date = driver.find_element(By.XPATH, DatePath).text
+        Dates.append(Date)
+        print(Date)
 
-    Date = driver.find_element(By.XPATH, DatePath).text
-    Dates.append(Date)
-    print(Date)
+        Subject = driver.find_element(By.XPATH, SubjectPath).text
+        Subjects.append(Subject)
+        print(Subject)
 
-    Subject = driver.find_element(By.XPATH, SubjectPath).text
-    Subjects.append(Subject)
-    print(Subject)
+        Location = driver.find_element(By.XPATH, LocationPath).text
+        Locations.append(Location)
+        print(Location)
 
-    Location = driver.find_element(By.XPATH, LocationPath).text
-    Locations.append(Location)
-    print(Location)
+        LoopCount +=1 
