@@ -1,66 +1,19 @@
 import requests
+import datetime
 import pandas as pd
-import time
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from icecream import ic
+from pandas import json_normalize
 
-url = 'https://www2.tulsacounty.org/electionboard/elections/election-calendar/'
-response = requests.get(url)
-service = Service()
-options = webdriver.ChromeOptions()
-driver = webdriver.Chrome(service=service, options=options)
+starting_day_of_current_year = datetime.datetime.now().replace(month=1, day=1)    
+ending_day_of_current_year = datetime.datetime.now().replace(month=12, day=31)
 
-# driver.implicitly_wait(30)
-driver.get(url)
+FirstDay = starting_day_of_current_year.strftime('%m/%d/%Y')
+LastDay = ending_day_of_current_year.strftime('%m/%d/%Y')                                
 
-#Delay until page fully loads
-WebDriverWait(driver,15).until(
-    EC.presence_of_element_located((By.CLASS_NAME, "e-subject")))
+url = "https://www2.tulsacounty.org/umbraco/BackOffice/Api/AppointmentsApi/LoadElectionData"
 
-#Extract text for parsing
-html = driver.page_source
-soup = BeautifulSoup(html, 'html.parser')
+headers = {
+'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'}
 
-WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.CLASS_NAME, 'e-appointment')))
+response = requests.request("POST", url, headers=headers).json()
 
-TotalEventCount =  len(driver.find_elements(By.CLASS_NAME, 'e-appointment'))
-LoopCount= 1
-
-#Get calendar month
-Month= soup.find('button', class_='e-tbar-btn e-tbtn-txt e-control e-btn e-lib')['aria-label']
-AppointmentXPath = '//*[@id="schedule"]/div[3]/div/table/tbody/tr[2]/td/div/table/tbody/tr[1]/td[2]/div[2]/div'
-DatePath = "//div[@class='e-date-time-details e-text-ellipsis']"
-SubjectPath = "//div[@class='e-subject e-text-ellipsis']"
-LocationPath = "//div[@class='e-location-details e-text-ellipsis']"
-Events = driver.find_elements(By.CLASS_NAME, 'e-appointment')
-
-Dates = []
-Subjects = []
-Locations = []
-
-while (LoopCount < TotalEventCount):
-    for Event in range(TotalEventCount):
-        EventInstance = driver.find_element(By.XPATH, AppointmentXPath).click()
-        
-        Date = driver.find_element(By.XPATH, DatePath).text
-        Dates.append(Date)
-        print(Date)
-
-        Subject = driver.find_element(By.XPATH, SubjectPath).text
-        Subjects.append(Subject)
-        print(Subject)
-
-        Location = driver.find_element(By.XPATH, LocationPath).text
-        Locations.append(Location)
-        print(Location)
-
-        LoopCount +=1 
+df = json_normalize(response)
