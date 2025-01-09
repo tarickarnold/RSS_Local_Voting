@@ -1,2 +1,2 @@
-# Voter-Reg
-Check website if I'm registered to vote.
+# RSS_Local_Voting
+Check website for voting dates.
